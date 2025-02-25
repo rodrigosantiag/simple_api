@@ -1,0 +1,8 @@
+version: "3.8"
+services:
+  api:
+    build: .
+    ports:
+      - "4000:4000"
+    environment:
+      - SECRET_KEY_BASE=8XGzfY9qi5vOz900NNok/owYxymx0vEb+M8EEk16ybUWj2kvfVykcB2K2EDTB076
