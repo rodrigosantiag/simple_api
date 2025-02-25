@@ -1,4 +1,4 @@
-elixir 1.14.4-otp-25
+elixir 1.14.5-otp-25
 erlang 25.3.2.10
 nodejs 21.7.1
 yarn 1.22.22
