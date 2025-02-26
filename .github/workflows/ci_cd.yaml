@@ -94,7 +94,7 @@ jobs:
             cache-from: type=registry,ref=ghcr.io/rodrigosantiag/simple_api:cache
             cache-to: type=registry,ref=ghcr.io/rodrigosantiag/simple_api:cache,mode=max
             tags: ${{ steps.meta.outputs.tags }}
-            platforms: linux/amd64,linux/arm64
+            platforms: linux/amd64
             labels: ${{ steps.meta.outputs.labels }}
             push: true
             build-args: |
