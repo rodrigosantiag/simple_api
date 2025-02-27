@@ -111,8 +111,7 @@ jobs:
       runs-on: ubuntu-latest
       needs: build-push
 
-      #TODO: add this as an if statement after confirm it works
-      # github.event_name == 'push' && github.ref == 'refs/heads/main'
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       env:
         TF_WORKING_DIR: terraform
         TF_VAR_ssh_key_id: ${{ secrets.SSH_KEY_ID }}
