@@ -1,0 +1,5 @@
+ssh_key_id = "<digital_ocean_ssh_key_id>"
+github_username = "<github_username>"
+github_token = "<github_token>" # Since you have access to repository, you should be able to pull the image.
+do_token = "<digital_ocean_token>"
+secret_key_base = "EoqleDvz9w2eqy0OWKf02uVK7Tvi/Cb/a98zXoHnqScEcauszjj02XelbK1053M4" # This is completely insecure, we need to figure out a way to securely store this.
