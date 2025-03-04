@@ -8,6 +8,7 @@ defmodule SimpleApiWeb.Router do
   scope "/api", SimpleApiWeb do
     pipe_through :api
     get "/hello", HelloController, :index
+    get "/display_name", HelloController, :display_name
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

@@ -5,6 +5,10 @@ defmodule SimpleApiWeb.HelloController do
     json(conn, %{message: "Hello DO droplet #{get_ip(conn)}!!!"})
   end
 
+  def display_name(conn, _params) do
+    json(conn, %{message: "Display name method from #{get_ip(conn)}!!!"})
+  end
+
   defp get_ip(conn) do
     forwarded_for = List.first(Plug.Conn.get_req_header(conn, "x-forwarded-for"))
 
