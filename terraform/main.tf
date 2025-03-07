@@ -48,6 +48,27 @@ resource "digitalocean_droplet" "app" {
   }
 }
 
+resource "digitalocean_loadbalancer" "api_lb" {
+  name = "api-lb"
+  region = "nyc2"
+
+
+  forwarding_rule {
+    entry_port = "80"
+    entry_protocol = "http"
+    target_port = "4000"
+    target_protocol = "http"
+  }
+
+  healthcheck {
+    port = 4000
+    protocol = "http"
+    path = "/api/hello"
+  }
+
+  droplet_ids = digitalocean_droplet.app[*].id
+}
+
 output "droplet_ips" {
   value = [for droplet in digitalocean_droplet.app : droplet.ipv4_address]
 }
