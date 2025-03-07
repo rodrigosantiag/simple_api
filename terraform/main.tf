@@ -13,11 +13,17 @@ provider "digitalocean" {
   token = var.do_token
 }
 
+# Set the number of instances to create
+variable "number_of_instances" {
+  default = 2
+}
+
 # Create a web server
 # Create a new Web Droplet in the nyc2 region
 resource "digitalocean_droplet" "app" {
+  count    = var.number_of_instances
   image    = "ubuntu-20-04-x64"
-  name     = "elixir-api"
+  name     = "elixir-api-${count.index}"
   region   = "nyc2"
   size     = "s-1vcpu-1gb"
   ssh_keys = [var.ssh_key_id]
@@ -42,6 +48,6 @@ resource "digitalocean_droplet" "app" {
   }
 }
 
-output "droplet_ip" {
-  value = digitalocean_droplet.app.ipv4_address
+output "droplet_ips" {
+  value = [for droplet in digitalocean_droplet.app : droplet.ipv4_address]
 }
