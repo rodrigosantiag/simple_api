@@ -138,7 +138,7 @@ resource "digitalocean_loadbalancer" "api_lb" {
 
   name   = "api-lb"
   region = local.region
-
+  enable_backend_keepalive = true
 
   forwarding_rule {
     entry_port      = "80"
@@ -208,7 +208,8 @@ resource "null_resource" "destroy_old_instances" {
           --region "$REGION" \
           --forwarding-rules "$FORWARDING_RULES" \
           --health-check "$HEALTH_CHECK_CLEANED" \
-          --droplet-ids "$NEW_DROPLETS"
+          --droplet-ids "$NEW_DROPLETS" \
+          --enable-backend-keepalive true
 
         echo "Load balancer updated successfully."
         echo "Waiting for the load balancer to distribute traffic..."
