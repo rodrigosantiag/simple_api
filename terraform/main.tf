@@ -23,7 +23,7 @@ variable "active_color" {
   default = "blue"
 }
 
-# Compute inactive color
+# Compute local variables
 locals {
   inactive_color = var.active_color == "blue" ? "green" : "blue"
   region         = "nyc2"
@@ -71,7 +71,7 @@ resource "digitalocean_droplet" "blue" {
   }
 }
 
-#  TODO: Is there a way to run this resource according to the active color var?
+# Create the necessary number of blue droplets
 resource "digitalocean_droplet" "green" {
   count             = var.number_of_instances
   image             = local.image
@@ -93,7 +93,7 @@ resource "digitalocean_droplet" "green" {
   }
 }
 
-# Health check
+# Health check of the new instances
 resource "null_resource" "health_check" {
   depends_on = [digitalocean_droplet.blue, digitalocean_droplet.green]
 
@@ -180,7 +180,7 @@ resource "null_resource" "wait_for_balancing" {
   }
 }
 
-# Destroy the old instances
+# Update load balancer to point to the new instances and destroy the old ones
 resource "null_resource" "destroy_old_instances" {
   depends_on = [null_resource.wait_for_balancing]
 
@@ -225,8 +225,4 @@ resource "null_resource" "destroy_old_instances" {
       fi
     EOT
   }
-}
-
-output "droplet_ips" {
-  value = var.active_color == "blue" ? digitalocean_droplet.blue[*].ipv4_address : digitalocean_droplet.green[*].ipv4_address
 }
