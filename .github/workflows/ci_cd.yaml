@@ -144,6 +144,9 @@ jobs:
           run: terraform init
           working-directory: ${{ env.TF_WORKING_DIR }}
 
+        - name: Pull Terraform State
+          run: terraform state pull > terraform.tfstate
+
         - name: Determine Next Deployment Color
           run: |
             CURRENT_COLOR=$(terraform output -raw active_color 2>/dev/null || echo "blue")
