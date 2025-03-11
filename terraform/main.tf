@@ -175,7 +175,7 @@ resource "null_resource" "wait_for_balancing" {
     command = <<EOT
       echo "Waiting for the load balancer to distribute traffic..."
 
-      sleep 10
+      sleep 30
     EOT
   }
 }
@@ -213,7 +213,7 @@ resource "null_resource" "destroy_old_instances" {
 
         echo "Load balancer updated successfully."
         echo "Waiting for the load balancer to distribute traffic..."
-        sleep 10
+        sleep 30
 
         echo "Destroying old instances..."
 
