@@ -144,18 +144,37 @@ jobs:
           run: terraform init
           working-directory: ${{ env.TF_WORKING_DIR }}
 
-        - name: Pull Terraform State
-          run: terraform state pull > terraform.tfstate
-
-        - name: Determine Next Deployment Color
+        - name: Set NEXT_COLOR Based on Droplets
           run: |
-            CURRENT_COLOR=$(terraform output -raw active_color 2>/dev/null || echo "blue")
-            echo "Current color is: $CURRENT_COLOR"
-            if [ "$CURRENT_COLOR" == "blue" ]; then
-              echo "NEXT_COLOR=green" >> $GITHUB_ENV
+            # Fetch the list of droplets with the doctl command
+            DROPLETS=$(doctl compute droplet list --format Name --no-header)
+            
+            # Check if any droplet names contain "elixir-api-blue" and "elixir-api-green"
+            BLUE_DROPLETS=$(echo "$DROPLETS" | grep "elixir-api-blue" || true)
+            GREEN_DROPLETS=$(echo "$DROPLETS" | grep "elixir-api-green" || true)
+        
+            # Determine next color based on the droplet names
+            if [ -n "$BLUE_DROPLETS" ] && [ -n "$GREEN_DROPLETS" ]; then
+              # Both colors exist, decide on the next color dynamically
+              echo "Both Blue and Green droplets found, switching to the next color."
+              CURRENT_COLOR=$(terraform output -raw active_color || echo "blue")
+              if [ "$CURRENT_COLOR" == "blue" ]; then
+                NEXT_COLOR="green"
+              else
+                NEXT_COLOR="blue"
+              fi
             else
-              echo "NEXT_COLOR=blue" >> $GITHUB_ENV
+              # If one of the colors does not exist, deploy to the other color
+              if [ -z "$BLUE_DROPLETS" ]; then
+                NEXT_COLOR="blue"
+              elif [ -z "$GREEN_DROPLETS" ]; then
+                NEXT_COLOR="green"
+              fi
             fi
+            
+            # Set the NEXT_COLOR for subsequent steps
+            echo "NEXT_COLOR=$NEXT_COLOR" >> $GITHUB_ENV
+            echo "Next color set to $NEXT_COLOR"
 
         - name: Validate Terraform
           run: terraform validate
