@@ -27,26 +27,16 @@ variable "active_color" {
 locals {
   inactive_color = var.active_color == "blue" ? "green" : "blue"
   region         = "nyc2"
-}
+  image          = "ubuntu-20-04-x64"
+  size           = "s-1vcpu-1gb"
 
-# Create the necessary number of blue droplets
-resource "digitalocean_droplet" "blue" {
-  count             = var.number_of_instances
-  image             = "ubuntu-20-04-x64"
-  name              = "elixir-api-blue-${count.index}"
-  region            = local.region
-  size              = "s-1vcpu-1gb"
-  ssh_keys          = [var.ssh_key_id]
-  graceful_shutdown = true
-
-  connection {
+  common_connection = {
     type        = "ssh"
     user        = "root"
     private_key = var.private_key
-    host        = self.ipv4_address
   }
 
-  provisioner "remote-exec" {
+  common_provisioner = {
     inline = [
       "sudo apt update",
       "sudo apt install -y docker.io",
@@ -56,42 +46,60 @@ resource "digitalocean_droplet" "blue" {
       "sudo docker pull ghcr.io/rodrigosantiag/simple_api:latest",
       "sudo docker run -e SECRET_KEY_BASE=${var.secret_key_base} -d --name simple_api -p 4000:4000 ghcr.io/rodrigosantiag/simple_api:latest"
     ]
+  }
+}
+
+# Create the necessary number of blue droplets
+resource "digitalocean_droplet" "blue" {
+  count             = var.number_of_instances
+  image             = local.image
+  name              = "elixir-api-blue-${count.index}"
+  region            = local.region
+  size              = local.size
+  ssh_keys          = [var.ssh_key_id]
+  graceful_shutdown = true
+
+  connection {
+    type        = local.common_connection.type
+    user        = local.common_connection.user
+    private_key = local.common_connection.private_key
+    host        = self.ipv4_address
+  }
+
+  provisioner "remote-exec" {
+    inline = local.common_provisioner.inline
   }
 }
 
 #  TODO: Is there a way to run this resource according to the active color var?
 resource "digitalocean_droplet" "green" {
   count             = var.number_of_instances
-  image             = "ubuntu-20-04-x64"
+  image             = local.image
   name              = "elixir-api-green-${count.index}"
   region            = local.region
-  size              = "s-1vcpu-1gb"
+  size              = local.size
   ssh_keys          = [var.ssh_key_id]
   graceful_shutdown = true
 
   connection {
-    type        = "ssh"
-    user        = "root"
-    private_key = var.private_key
+    type        = local.common_connection.type
+    user        = local.common_connection.user
+    private_key = local.common_connection.private_key
     host        = self.ipv4_address
   }
 
   provisioner "remote-exec" {
-    inline = [
-      "sudo apt update",
-      "sudo apt install -y docker.io",
-      "sudo systemctl enable docker",
-      "sudo systemctl start docker",
-      "sudo docker login ghcr.io -u ${var.github_username} -p ${var.github_token}",
-      "sudo docker pull ghcr.io/rodrigosantiag/simple_api:latest",
-      "sudo docker run -e SECRET_KEY_BASE=${var.secret_key_base} -d --name simple_api -p 4000:4000 ghcr.io/rodrigosantiag/simple_api:latest"
-    ]
+    inline = local.common_provisioner.inline
   }
 }
 
 # Health check
 resource "null_resource" "health_check" {
   depends_on = [digitalocean_droplet.blue, digitalocean_droplet.green]
+
+  triggers = {
+    color = var.active_color
+  }
 
   provisioner "local-exec" {
     command = <<EOT
