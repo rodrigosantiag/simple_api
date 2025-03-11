@@ -185,5 +185,5 @@ jobs:
           working-directory: ${{ env.TF_WORKING_DIR }}
 
         - name: Apply Terraform
-          run: terraform apply -var="active_color=${{ env.NEXT_COLOR }}" --auto-approve tfplan
+          run: terraform apply --auto-approve tfplan
           working-directory: ${{ env.TF_WORKING_DIR }}
