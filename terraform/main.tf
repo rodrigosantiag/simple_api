@@ -226,3 +226,7 @@ resource "null_resource" "destroy_old_instances" {
     EOT
   }
 }
+
+output "active_color" {
+  value = var.active_color  
+}

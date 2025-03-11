@@ -139,6 +139,17 @@ jobs:
           run: terraform init
           working-directory: ${{ env.TF_WORKING_DIR }}
 
+        - name: Switch Active Color
+          run: |
+            CURRENT_COLOR=$(terraform output -raw active_color)
+            if [ "$CURRENT_COLOR" == "blue" ]; then
+              echo "Switching to Green"
+              echo "active_color=green" >> terraform.tfvars
+            else
+              echo "Switching to Blue"
+              echo "active_color=blue" >> terraform.tfvars
+            fi
+
         - name: Validate Terraform
           run: terraform validate
           working-directory: ${{ env.TF_WORKING_DIR }}
