@@ -26,17 +26,17 @@ variable "active_color" {
 # Compute inactive color
 locals {
   inactive_color = var.active_color == "blue" ? "green" : "blue"
-  region = "nyc2"
+  region         = "nyc2"
 }
 
 # Create the necessary number of blue droplets
 resource "digitalocean_droplet" "blue" {
-  count    = var.number_of_instances
-  image    = "ubuntu-20-04-x64"
-  name     = "elixir-api-blue-${count.index}"
-  region   = local.region
-  size     = "s-1vcpu-1gb"
-  ssh_keys = [var.ssh_key_id]
+  count             = var.number_of_instances
+  image             = "ubuntu-20-04-x64"
+  name              = "elixir-api-blue-${count.index}"
+  region            = local.region
+  size              = "s-1vcpu-1gb"
+  ssh_keys          = [var.ssh_key_id]
   graceful_shutdown = true
 
   connection {
@@ -61,12 +61,12 @@ resource "digitalocean_droplet" "blue" {
 
 #  TODO: Is there a way to run this resource according to the active color var?
 resource "digitalocean_droplet" "green" {
-  count    = var.number_of_instances
-  image    = "ubuntu-20-04-x64"
-  name     = "elixir-api-green-${count.index}"
-  region   = local.region
-  size     = "s-1vcpu-1gb"
-  ssh_keys = [var.ssh_key_id]
+  count             = var.number_of_instances
+  image             = "ubuntu-20-04-x64"
+  name              = "elixir-api-green-${count.index}"
+  region            = local.region
+  size              = "s-1vcpu-1gb"
+  ssh_keys          = [var.ssh_key_id]
   graceful_shutdown = true
 
   connection {
@@ -140,13 +140,13 @@ resource "digitalocean_loadbalancer" "api_lb" {
   }
 
   healthcheck {
-    port     = 4000
-    protocol = "http"
-    path     = "/api/hello"
-    check_interval_seconds = 3
+    port                     = 4000
+    protocol                 = "http"
+    path                     = "/api/hello"
+    check_interval_seconds   = 3
     response_timeout_seconds = 3
-    unhealthy_threshold = 2
-    healthy_threshold = 2
+    unhealthy_threshold      = 2
+    healthy_threshold        = 2
   }
 
   droplet_ids = concat(
@@ -183,26 +183,27 @@ resource "null_resource" "destroy_old_instances" {
   provisioner "local-exec" {
     command = <<EOT
       OLD_DROPLETS=$(doctl compute droplet list --format ID,Name | grep "elixir-api-${local.inactive_color}" | awk '{print $1}' | paste -sd "," -)
-      
+
       if [ ! -z "$OLD_DROPLETS" ]; then
-        echo "Draining old instances before destroying them..."
+        NEW_DROPLETS=$(doctl compute droplet list --format ID,Name | grep "elixir-api-${var.active_color}" | awk '{print $1}' | paste -sd "," -)
 
-        # for droplet_id in $(echo $OLD_DROPLETS | tr "," "\n"); do
-        #   doctl compute droplet-action shutdown $droplet_id
+        echo "Updating the load balancer to point to the new instances..."
 
-        #   echo "Instance $droplet_id is being drained..."
+        read -r NAME REGION FORWARDING_RULES HEALTH_CHECK <<< "$(doctl compute load-balancer get ${digitalocean_loadbalancer.api_lb.id} --format Name,Region,ForwardingRules,HealthCheck --no-header)"
 
-        #   sleep 10
+        HEALTH_CHECK_CLEANED=$(echo "$HEALTH_CHECK" | sed "s/,proxy_protocol:<nil>//g")
 
-        #   doctl compute droplet-action power-off $droplet_id
 
-        #   echo "Instance $droplet_id is powered off."
-        # done
+        doctl compute load-balancer update ${digitalocean_loadbalancer.api_lb.id} \
+          --name "$NAME" \
+          --region "$REGION" \
+          --forwarding-rules "$FORWARDING_RULES" \
+          --health-check "$HEALTH_CHECK_CLEANED" \
+          --droplet-ids "$NEW_DROPLETS"
 
-        # doctl compute load-balancer remove-droplets ${digitalocean_loadbalancer.api_lb.id} --droplet-ids $OLD_DROPLETS
-
-        # echo "Waiting 30 seconds to drain the old instances..."
-        # sleep 30
+        echo "Load balancer updated successfully."
+        echo "Waiting for the load balancer to distribute traffic..."
+        sleep 10
 
         echo "Destroying old instances..."
 
