@@ -146,7 +146,8 @@ jobs:
 
         - name: Determine Next Deployment Color
           run: |
-            CURRENT_COLOR=$(terraform output -raw active_color || echo "blue")
+            CURRENT_COLOR=$(terraform output -raw active_color 2>/dev/null || echo "blue")
+            echo "Current color is: $CURRENT_COLOR"
             if [ "$CURRENT_COLOR" == "blue" ]; then
               echo "NEXT_COLOR=green" >> $GITHUB_ENV
             else
