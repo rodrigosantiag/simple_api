@@ -144,15 +144,13 @@ jobs:
           run: terraform init
           working-directory: ${{ env.TF_WORKING_DIR }}
 
-        - name: Switch Active Color
+        - name: Determine Next Deployment Color
           run: |
-            CURRENT_COLOR=$(terraform output -raw active_color)
+            CURRENT_COLOR=$(terraform output -raw active_color || echo "blue")
             if [ "$CURRENT_COLOR" == "blue" ]; then
-              echo "Switching to Green"
-              echo "active_color=green" >> terraform.tfvars
+              echo "NEXT_COLOR=green" >> $GITHUB_ENV
             else
-              echo "Switching to Blue"
-              echo "active_color=blue" >> terraform.tfvars
+              echo "NEXT_COLOR=blue" >> $GITHUB_ENV
             fi
 
         - name: Validate Terraform
@@ -160,9 +158,9 @@ jobs:
           working-directory: ${{ env.TF_WORKING_DIR }}
 
         - name: Plan Terraform
-          run: terraform plan -out=tfplan
+          run: terraform plan -var="active_color=${{ env.NEXT_COLOR }}" -out=tfplan
           working-directory: ${{ env.TF_WORKING_DIR }}
 
         - name: Apply Terraform
-          run: terraform apply -auto-approve tfplan
+          run: terraform apply -var="active_color=${{ env.NEXT_COLOR }}" --auto-approve tfplan
           working-directory: ${{ env.TF_WORKING_DIR }}
