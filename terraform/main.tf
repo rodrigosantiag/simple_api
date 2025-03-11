@@ -191,10 +191,10 @@ resource "null_resource" "destroy_old_instances" {
   provisioner "local-exec" {
     command = <<EOT
     bash -c '
-      OLD_DROPLETS=$(doctl compute droplet list --format ID,Name | grep "elixir-api-${local.inactive_color}" | awk '{print $1}' | paste -sd "," -)
+      OLD_DROPLETS=$(doctl compute droplet list --format ID,Name | grep "elixir-api-${local.inactive_color}" | awk '{print \$1}' | paste -sd "," -)
 
       if [ ! -z "$OLD_DROPLETS" ]; then
-        NEW_DROPLETS=$(doctl compute droplet list --format ID,Name | grep "elixir-api-${var.active_color}" | awk '{print $1}' | paste -sd "," -)
+        NEW_DROPLETS=$(doctl compute droplet list --format ID,Name | grep "elixir-api-${var.active_color}" | awk '{print \$1}' | paste -sd "," -)
 
         echo "Updating the load balancer to point to the new instances..."
 
