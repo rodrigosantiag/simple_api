@@ -125,6 +125,11 @@ jobs:
         - name: Checkout code
           uses: actions/checkout@v4
 
+        - name: Install doctl
+          uses: digitalocean/action-doctl@v2
+          with:
+            token: ${{ secrets.DO_KEY }}
+
         - name: Setup Terraform
           uses: hashicorp/setup-terraform@v3
 
